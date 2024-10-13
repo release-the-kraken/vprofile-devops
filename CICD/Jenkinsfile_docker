@@ -1,0 +1,63 @@
+pipeline{
+    agent any
+    tools{
+        maven 'MAVEN3'
+        jdk 'OpenJDK-17'
+    }
+    environment{
+        registryCredentials = 'ecr:us-east-1:AWS_ACCESS'
+        appRegistry = '851725515084.dkr.ecr.us-east-1.amazonaws.com/vprofileapp-img'
+        vprofileRegistry = 'https://851725515084.dkr.ecr.us-east-1.amazonaws.com'
+    }
+
+    stages{
+        stage('Checkout from VCS'){
+            steps{
+                git branch: 'docker', url: 'https://github.com/devopshydclub/vprofile-project.git'
+            }
+        }
+
+        stage('Run unit tests'){
+            steps{
+                sh 'mvn test'
+            }
+        }
+
+        stage('Checkstyle'){
+            steps{
+                sh 'mvn checkstyle:checkstyle'
+            }
+            post{
+                success {
+                    echo 'Generated analysis result'
+                }
+            }
+        }
+
+        stage('Sonarqube analysis'){
+            steps{
+                timeout(time: 5, unit: 'SECONDS')
+                echo 'Mocked sonarqube analysis'
+            }
+        }
+
+        stage('Build Docker image'){
+            steps{
+                script{
+                    dockerImage = docker.build( appRegistry + ":$BUILD_NUMBER" , "./Docker-files/app/multistage")
+                }
+            }
+        }
+
+        stage('Upload image'){
+            steps{
+                script{
+                    docker.withRegistry( vprofileRegistry, registryCredentials){
+                        dockerImage.push("$BUILD_NUMBER")
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+    }
+}

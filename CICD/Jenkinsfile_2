@@ -1,0 +1,68 @@
+pipeline{
+    agent any
+    tools{
+        maven "MAVEN3"
+        jdk "OpenJDK-11"
+    }
+
+    stages{
+        stage('Checout from VCS'){
+            steps{
+                git branch: 'main', url: 'https://github.com/hkhcoder/vprofile-project.git'
+            }
+        }
+
+        stage('Build'){
+            steps{
+                sh 'mvn install -DskipTests'
+            }
+
+            post{
+                success{
+                    echo 'Archiving artefacts.'
+                    archiveArtifacts artifacts: '**/*.war'
+                }
+            }
+        }
+
+        stage('Test'){
+            steps{
+                sh 'mvn test'
+            }
+        }
+
+        stage('Style check'){
+            steps{
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+        stage('Sonar'){
+            environment{
+                scannerHome = tool 'SONAR4.7'
+            }
+            steps{
+                withSonarQubeEnv('sonar'){
+                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                            -Dsonar.projectName=vprofile \
+                            -Dsonar.projectVersion=1.0 \
+                            -Dsonar.sources=src/main \
+                            -Dsonar.tests=src/test \
+                            -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                            -Dsonar.junit.reportPaths=build/test-results/test \
+                            -Dsonar.jacoco.reportPaths=build/jacoco/test.exec \
+                            -Dsonar.java.checkstyle.reportPaths=build/reports/checkstyle/main.xml \
+                            -Dsonar.java.pmd.reportPaths=build/reports/pmd/main.xml \
+                            -Dsonar.java.spotbugs.reportPaths=build/reports/spotbugs/main.xml'''
+                }
+            }
+        }
+        stage('Quality gate analysis'){
+            steps{
+                timeout(time: 1, unit: 'MINUTES'){
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+    }
+}
