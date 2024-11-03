@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kanyerest-service
+  namespace: misiano-dev
+spec:
+  selector:
+    app:  kanyerest
+  type:  NodePort
+  ports:
+  - name:  kanye-port
+    port:  8090
+    nodePort:  30001
+    targetPort: kanye-port
+    protocol: TCP

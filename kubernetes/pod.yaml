@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kanyerest
+  namespace: misiano-dev
+  labels:
+    app: kanyerest
+spec:
+  containers:
+  - name: kanyerest
+    image: wmichal13/kanyerest:0.1
+    ports:
+    - name: kanye-port
+      containerPort: 8080
