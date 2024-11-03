@@ -1,3 +1,3 @@
 Services of type NodePort can be exposed via the 'minikube service <service-name> [-n <namespace-name>] --url' command. It must be run in a separate terminal window to keep the tunnel open.
 
-Services of type LoadBalancer can be exposed via the 'minikube tunnel' command. Then run 'kubectl                   get svc <service-name> [-n <namespace-name>] to see the assigned external IP.
+Services of type LoadBalancer can be exposed via the 'minikube tunnel' command. Then run 'kubectl get svc <service-name> [-n <namespace-name>] to see the assigned external IP.
